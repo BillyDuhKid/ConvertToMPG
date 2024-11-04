@@ -6,6 +6,7 @@
 
 
 # frequently changed options:
+[bool]$bShutdownPC = $false;
 [bool]$bRenameOnly = $false;
 [bool]$bTrimPrefix = $true
 [bool]$bTrimSuffix = $true;
@@ -179,18 +180,14 @@ function GetCleanFileName([string]$in_string)
     #replace dashes with spaces
     $return_string = $return_string -replace '-', ' '
 
+    # replace & with and, alternatly could add & to IsCharValid, but could possibly add issues to some OS
+    # spaces around and are to solve for D&D or simlar and double spaces are cleaned up below.
+    $return_string = $return_string -replace '&', ' and '
+
     #trim leading and trailing spaces
     $return_string = $return_string.Trim()
 
-    #remove double spaces, note the +1 is to be sure it runs at least once.
-    [int]$prevLength = $return_string.Length + 1
-    while($prevLength -ne $return_string.Length)
-    {
-        $prevLength = $return_string.Length
-        $return_string = $return_string -replace '  ', ' '
-    }
-
-    $prevLength = $return_string.Length
+    [int]$prevLength = $return_string.Length
 
     for ($i = 0;
         $i -lt $prevLength;
@@ -212,6 +209,14 @@ function GetCleanFileName([string]$in_string)
             $return_string = $before + $after
             $prevLength = $return_string.Length
         }
+    }
+
+    #remove double spaces, note the +1 is to be sure it runs at least once.
+    [int]$prevLength = $return_string.Length + 1
+    while($prevLength -ne $return_string.Length)
+    {
+        $prevLength = $return_string.Length
+        $return_string = $return_string -replace '  ', ' '
     }
 
     if ($bDebugging){ Write-Host "GetCleanFileName returning:" $return_string }
@@ -322,4 +327,10 @@ foreach($FileName in $FilesArray)
     }
 
     Write-Host "Renamed " $FileName "to" $NewFileName
+}
+
+if ($bShutdownPC)
+{
+   # shutdown /s
+    Stop-Computer -ComputerName localhost
 }
