@@ -1,30 +1,50 @@
-﻿# to be able to run PowerShell scripts use:
+﻿# This script is written to quickly rename and run mass files through a .bat conversion file with ffmpeg.
+# a slightly lighter weight version will only rename the files by setting $bRenameOnly to true.
+# 
+# 
+# Before running scripts to enable PowerShell scripts type the following in PowerShell as administrator:
+#
 # Set-ExecutionPolicy RemoteSigned
 #
-# example of !ConvertToMPG.bat:
+# Here is an example of !ConvertToMPG.bat in case you need it, see help for ffmpeg for explincation of these options:
+#
 # ffmpeg -i input.mkv -profile:v baseline -level 3.0 -vf format=yuv420p -preset slow -crf 22 -ac 2 -map_metadata -1 -map 0:0 -map 0:1 output.mp4
 
 
 # frequently changed options:
-[bool]$bShutdownPC = $false;
-[bool]$bRenameOnly = $false;
+#
+# trim the prefix for the file names. Often the series name. This will also attempt to identify season and episode numbers
 [bool]$bTrimPrefix = $true
-[bool]$bTrimSuffix = $true;
+# trim the suffix if there are repeate characters after the episode name. i.e. encoding information, etc.
+[bool]$bTrimSuffix = $true
+# use single digit season numbers. i.e. S01E12 would become S1E12.
 [bool]$bSingleDigitSeasonNumbers = $true
 
+# only rename files if they don't need to be re-encoded, but the name need to be cleaned up.
+[bool]$bRenameOnly = $false
+# if running unattended this option will shut down the PC upon script completion.
+[bool]$bShutdownPC = $false
+
+# less used options:
+
+# rename the extention in this function. Only files of this type will be processed.
 function GetAllFilesOfType()
 {
     # edit the file extention here for other file types:
     return Get-ChildItem -Path . -Filter "*.mkv"
 }
 
-# less used options:
+# will give useful debug information if the script isn't acting as expected. i.e. return values from functions.
 [bool]$bDebugging = $false
+# more debugging details, often data about every loop iteration.
 [bool]$bVerboseDebugging = $false
+# the format the files will be converted into. Note: this must match the output extention in !ConvertToMPG.bat to work properly
 [string]$TargetFileExtention = ".mp4"
+# the full path of the ffmpeg executable.
 [string]$ffmpegPath = "D:\Working\ffmpeg\bin"
 
 
+# functions
 function GetFileExtention([string]$file_name)
 {
     [array]$test_array = $file_name.Split(".")
@@ -326,7 +346,8 @@ foreach($FileName in $FilesArray)
         Set-Location $WorkingLocation
     }
 
-    Write-Host "Renamed " $FileName "to" $NewFileName
+    Write-Host "Renamed: " $FileName 
+    Write-Host "     to: " $NewFileName
 }
 
 if ($bShutdownPC)
