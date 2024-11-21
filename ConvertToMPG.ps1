@@ -27,10 +27,10 @@
 
 # less used options:
 
-# rename the extention in this function. Only files of this type will be processed.
+# rename the Extension in this function. Only files of this type will be processed.
 function GetAllFilesOfType()
 {
-    # edit the file extention here for other file types:
+    # edit the file Extension here for other file types:
     return Get-ChildItem -Path . -Filter "*.mkv"
 }
 
@@ -38,20 +38,20 @@ function GetAllFilesOfType()
 [bool]$bDebugging = $false
 # more debugging details, often data about every loop iteration.
 [bool]$bVerboseDebugging = $false
-# the format the files will be converted into. Note: this must match the output extention in !ConvertToMPG.bat to work properly
-[string]$TargetFileExtention = ".mp4"
+# the format the files will be converted into. Note: this must match the output Extension in !ConvertToMPG.bat to work properly
+[string]$TargetFileExtension = ".mp4"
 # the full path of the ffmpeg executable.
 [string]$ffmpegPath = "D:\Working\ffmpeg\bin"
 
 
 # functions
-function GetFileExtention([string]$file_name)
+function GetFileExtension([string]$file_name)
 {
     [array]$test_array = $file_name.Split(".")
     [int]$index = $test_array.Length - 1
     [string]$return_string = "." + $test_array[$index]
 
-    if ($bDebugging){ Write-Host "GetFileExtention returning:" $return_string }
+    if ($bDebugging){ Write-Host "GetFileExtension returning:" $return_string }
     return $return_string
 }
 
@@ -181,8 +181,8 @@ function TrimeSuffix([string]$file_name, [string]$suffix)
     }
     else
     {
-        #if there isn't a suffix to trim, just trim the original file extention
-        [int]$index = $file_name.IndexOf($OriginalFileExtention)
+        #if there isn't a suffix to trim, just trim the original file Extension
+        [int]$index = $file_name.IndexOf($OriginalFileExtension)
         $return_string = $file_name.Substring(0, $index)
     }
 
@@ -271,7 +271,7 @@ function IsCharLetter([char]$char)
 # variables that need to persist
 [string]$RepeatePrefix = ""
 [string]$RepeateSuffix = ""
-[string]$OriginalFileExtention = ""
+[string]$OriginalFileExtension = ""
 
 
 # program starts here
@@ -282,7 +282,7 @@ if ($FilesArray.Length -lt 1)
     break;
 }
 
-$OriginalFileExtention = GetFileExtention $FilesArray[0]
+$OriginalFileExtension = GetFileExtension $FilesArray[0]
 
 if ($bTrimPrefix)
 {
@@ -305,6 +305,11 @@ foreach($FileName in $FilesArray)
     {
         $NewFileName = TrimeSuffix $NewFileName $RepeateSuffix
     }
+    else
+    {
+        #only remove the file Extension
+        $NewFileName = TrimeSuffix $NewFileName $OriginalFileExtension
+    }
 
     if ($bTrimPrefix)
     {
@@ -322,24 +327,24 @@ foreach($FileName in $FilesArray)
 
     $NewFileName = GetCleanFileName $NewFileName
 
-    # put the name back togather $EpisodePrefix + $NewFileName + extention
+    # put the name back togather $EpisodePrefix + $NewFileName + Extension
     if ($bRenameOnly)
     {
-        $NewFileName = $EpisodePrefix + $NewFileName + $OriginalFileExtention
+        $NewFileName = $EpisodePrefix + $NewFileName + $OriginalFileExtension
         Rename-Item -literalpath $FileName $NewFileName
     }
     else
     {
         [string]$WorkingLocation = Get-Location
-        $NewFileName = $EpisodePrefix + $NewFileName + $TargetFileExtention
-        [string]$CopyTo = $ffmpegPath + "\input" + $OriginalFileExtention
+        $NewFileName = $EpisodePrefix + $NewFileName + $TargetFileExtension
+        [string]$CopyTo = $ffmpegPath + "\input" + $OriginalFileExtension
         Copy-Item -literalpath $FileName $CopyTo
         Set-Location $ffmpegPath
 
         cmd.exe /c '!ConvertToMPG.bat'
         $CopyTo = $WorkingLocation + "\" + $NewFileName
         Copy-Item -literalpath "output.mp4" $CopyTo
-        [string]$inputFileName = "input" + $OriginalFileExtention
+        [string]$inputFileName = "input" + $OriginalFileExtension
         Remove-Item $inputFileName
         Remove-Item "output.mp4"
 
